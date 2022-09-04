@@ -5,7 +5,7 @@ import org.example.constants.Constants;
 import org.example.dtos.request.PersonaRequestDTO;
 import org.example.dtos.response.PersonaResponseDTO;
 import org.example.entities.Persona;
-import org.example.utilities.mappers.PersonaMapper;
+import org.example.mappers.PersonaMapper;
 import org.example.services.IPersonaService;
 
 import java.sql.*;
