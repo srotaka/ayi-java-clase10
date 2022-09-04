@@ -5,7 +5,7 @@ import org.example.constants.Constants;
 import org.example.dtos.request.EmpleadoRequestDTO;
 import org.example.dtos.response.EmpleadoResponseDTO;
 import org.example.entities.Empleado;
-import org.example.utilities.mappers.EmpleadoMapper;
+import org.example.mappers.EmpleadoMapper;
 import org.example.services.IEmpleadoService;
 
 import java.sql.Connection;

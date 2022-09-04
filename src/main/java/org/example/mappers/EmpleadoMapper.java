@@ -1,4 +1,4 @@
-package org.example.utilities.mappers;
+package org.example.mappers;
 
 import org.example.dtos.response.EmpleadoResponseDTO;
 import org.example.entities.Empleado;
