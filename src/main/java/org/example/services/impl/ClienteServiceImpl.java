@@ -2,19 +2,21 @@ package org.example.services.impl;
 
 import org.example.configuration.ConexionDB;
 import org.example.constants.Constants;
-import org.example.dtos.request.PersonaRequestDTO;
-import org.example.dtos.response.PersonaResponseDTO;
-import org.example.entities.Persona;
-import org.example.utilities.mappers.PersonaMapper;
-import org.example.services.IPersonaService;
+import org.example.dtos.request.ClienteRequestDTO;
+import org.example.dtos.response.ClienteResponseDTO;
+import org.example.entities.Cliente;
+import org.example.utilities.mappers.ClienteMapper;
+import org.example.services.IClienteService;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PersonaServiceImpl implements IPersonaService {
-
-    PersonaMapper personaMapper = new PersonaMapper();
+public class ClienteServiceImpl implements IClienteService {
+    ClienteMapper mapper = new ClienteMapper();
     private ConexionDB conexionDB = new ConexionDB();
     private ConexionDB conexionDBAux = new ConexionDB();
     Connection conn = null;
@@ -24,9 +26,8 @@ public class PersonaServiceImpl implements IPersonaService {
     ResultSet rs = null;
     ResultSet rsAux = null;
 
-
     @Override
-    public Integer createPersona(PersonaRequestDTO personaRequest){
+    public void createCliente(ClienteRequestDTO clienteRequestDTO) {
         int indInsert = 0;
         conexionDB = new ConexionDB();
         conn = null;
@@ -34,12 +35,15 @@ public class PersonaServiceImpl implements IPersonaService {
 
         try {
             conn = conexionDB.getConnection();
-            stmt = conn.prepareStatement(Constants.SQL_INSERT_PERSON);
+            stmt = conn.prepareStatement(Constants.SQL_INSERT_CLIENTE);
 
-            stmt.setString(1, personaRequest.getNombre());
-            stmt.setString(2, personaRequest.getApellido());
-            stmt.setInt(3, personaRequest.getEdad());
-            stmt.setString(4, personaRequest.getDireccion());
+            stmt.setString(1, clienteRequestDTO.getNombre());
+            stmt.setString(2, clienteRequestDTO.getApellido());
+            stmt.setInt(3, clienteRequestDTO.getEdad());
+            stmt.setString(4, clienteRequestDTO.getDireccion());
+            stmt.setString(5, clienteRequestDTO.getCiudad());
+            stmt.setString(6, clienteRequestDTO.getEmail());
+            stmt.setString(7, clienteRequestDTO.getVip());
 
             indInsert = stmt.executeUpdate();
 
@@ -47,7 +51,7 @@ public class PersonaServiceImpl implements IPersonaService {
                 System.out.println("No se ha podido insertar");
                 throw new RuntimeException();
             } else {
-                System.out.println("Se ha insertado a " + personaRequest.getNombre() + " " + personaRequest.getApellido());
+                System.out.println("Se ha insertado a " + clienteRequestDTO.getNombre() + " " + clienteRequestDTO.getApellido());
             }
 
         } catch (SQLException e) {
@@ -63,17 +67,13 @@ public class PersonaServiceImpl implements IPersonaService {
             }
         }
 
-
-        return indInsert;
     }
 
     @Override
-    public Integer updatePersona(Integer id, PersonaRequestDTO personaRequest) {
-
+    public void updateCliente(Integer id, ClienteRequestDTO clienteRequestDTO) {
         conexionDB = new ConexionDB();
         conn = null;
         stmt = null;
-
         Integer indInsert = 0, validacion = 0;
 
         try {
@@ -83,13 +83,11 @@ public class PersonaServiceImpl implements IPersonaService {
                 throw new RuntimeException("No existe el ID " + id);
             }
             conn = conexionDB.getConnection();
-            stmt = conn.prepareStatement(Constants.SQL_UPDATE_PERSON);
+            stmt = conn.prepareStatement(Constants.SQL_UPDATE_CLIENTE);
 
-            stmt.setString(1, personaRequest.getNombre());
-            stmt.setString(2, personaRequest.getApellido());
-            stmt.setInt(3, personaRequest.getEdad());
-            stmt.setString(4, personaRequest.getDireccion());
-            stmt.setInt(5, id);
+            stmt.setString(1, clienteRequestDTO.getDireccion());
+            stmt.setString(2, clienteRequestDTO.getCiudad());
+            stmt.setInt(3, id);
 
             indInsert = stmt.executeUpdate();
 
@@ -114,11 +112,49 @@ public class PersonaServiceImpl implements IPersonaService {
                 ex.printStackTrace(System.out);
             }
         }
-        return indInsert;
     }
 
     @Override
-    public void deletePersona(Integer id) {
+    public List<ClienteResponseDTO> getAllClientes() {
+
+        List<ClienteResponseDTO> listaCliente = new ArrayList<>();
+        try {
+            conn = conexionDB.getConnection();
+            stmt = conn.prepareStatement(Constants.SQL_SELECT_CLIENTE);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer id = rs.getInt("id");
+                String nombre = rs.getString("nombre");
+                String apellido = rs.getString("apellido");
+                Integer edad = rs.getInt("edad");
+                String direccion = rs.getString("direccion");
+                String ciudad = rs.getString("ciudad");
+                String email = rs.getString("email");
+                String vip = rs.getString("vip");
+
+
+                Cliente cliente =  new Cliente(id, nombre, apellido, edad, direccion, email, ciudad, vip);
+
+                listaCliente.add(mapper.entityToDto(cliente));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                conexionDB.close(rs);
+                conexionDB.close(stmt);
+                conexionDB.close(conn);
+            } catch (SQLException ex) {
+                ex.printStackTrace(System.out);
+            }
+        }
+        return listaCliente;
+    }
+
+    @Override
+    public void deleteCliente(Integer id) {
         conexionDB = new ConexionDB();
         stmt = null;
         int indInsert = 0, validacion = 0;
@@ -130,7 +166,7 @@ public class PersonaServiceImpl implements IPersonaService {
                 throw  new RuntimeException("No existe el ID " + id);
             }
             conn = conexionDB.getConnection();
-            stmt = conn.prepareStatement(Constants.SQL_DELETE_PERSON);
+            stmt = conn.prepareStatement(Constants.SQL_DELETE_CLIENTE);
             stmt.setInt(1, id);
 
             indInsert = stmt.executeUpdate();
@@ -154,53 +190,16 @@ public class PersonaServiceImpl implements IPersonaService {
         }
 
         System.out.println("ID " + id + " borrado exitosamente.");
+
     }
 
-    @Override
-    public List<PersonaResponseDTO> getAllPersonas() {
-
-        Persona persona = null;
-        List<PersonaResponseDTO> personas = new ArrayList<>();
-
-        try {
-            conn = conexionDB.getConnection();
-            stmt = conn.prepareStatement(Constants.SQL_SELECT_PERSON);
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String nombre = rs.getString("nombre");
-                String apellido = rs.getString("apellido");
-                Integer edad = rs.getInt("edad");
-                String direccion = rs.getString("direccion");
-
-                persona = new Persona(id, nombre, apellido, edad, direccion);
-
-                personas.add(personaMapper.entityToDto(persona));
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                conexionDB.close(rs);
-                conexionDB.close(stmt);
-                conexionDB.close(conn);
-            } catch (SQLException ex) {
-                ex.printStackTrace(System.out);
-            }
-        }
-        return personas;
-    }
-
+    /*  VALIDACIONES */
     public Integer validarID(Integer id){
-
         conexionDBAux = new ConexionDB();
         int result = 0;
-
         try {
             connAux = conexionDBAux.getConnection();
-            stmtAux = connAux.prepareStatement(Constants.SQL_SELECT_PERSON_BY_ID);
+            stmtAux = connAux.prepareStatement(Constants.SQL_SELECT_CLIENTE_BY_ID);
             stmtAux.setInt(1, id);
             rsAux = stmtAux.executeQuery();
 
@@ -224,6 +223,5 @@ public class PersonaServiceImpl implements IPersonaService {
         }
         return result;
     }
-
 
 }

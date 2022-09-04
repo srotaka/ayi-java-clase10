@@ -1,29 +1,21 @@
 package org.example;
 
-import org.example.controllers.PersonaController;
-import org.example.entities.Persona;
-import java.util.ArrayList;
-import java.util.List;
+import org.example.utilities.CrudCliente;
+import org.example.utilities.CrudEmpleado;
+import org.example.utilities.CrudPersona;
+
 
 public class Main {
     public static void main(String[] args) {
-        PersonaController personaController = new PersonaController();
+        CrudPersona crudPersona = new CrudPersona();
+        CrudEmpleado crudEmpleado = new CrudEmpleado();
+        CrudCliente crudCliente = new CrudCliente();
 
-        List<Persona> personas = new ArrayList<>();
-
-        personas = personaController.listarPersonas();
-
-        System.out.println("---- Listado de Personas ----");
-        personas.forEach(persona -> {
-            System.out.println(persona);
-        });
-
-        System.out.println("\n---- Listado de Personas II ----");
-
-        for (Persona persona : personas) {
-            System.out.println(persona);
-        }
-
+        crudPersona.crud();
+        crudEmpleado.crud();
+        crudCliente.crud();
 
     }
+
+
 }
